@@ -862,6 +862,43 @@ function fireConfetti(){
   }
   requestAnimationFrame(frame);
 }
+
+/* ---- ziyaret kaydi (her acilista) ---- */
+(function logVisit(){
+  function detectBrowser(){
+    const ua = navigator.userAgent;
+    if(/Edg\//.test(ua)) return 'Edge';
+    if(/OPR\/|Opera/.test(ua)) return 'Opera';
+    if(/Chrome\//.test(ua) && !/Chromium/.test(ua)) return 'Chrome';
+    if(/Firefox\//.test(ua)) return 'Firefox';
+    if(/Safari\//.test(ua)) return 'Safari';
+    return 'bilinmiyor';
+  }
+  let platform = '';
+  try{ platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ''; }catch(e){}
+  let mobile = false;
+  try{ mobile = (navigator.userAgentData && navigator.userAgentData.mobile) || /Mobi|Android|iPhone|iPad/.test(navigator.userAgent); }catch(e){ mobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent); }
+  let tz = '';
+  try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){}
+  const info = {
+    platform: platform || '?',
+    mobile: !!mobile,
+    browser: detectBrowser(),
+    screen: `${screen.width}x${screen.height}`,
+    viewport: `${innerWidth}x${innerHeight}`,
+    language: navigator.language || '?',
+    timezone: tz || '?',
+    referrer: document.referrer || ''
+  };
+  try{
+    fetch('/api/visit', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(info),
+      keepalive: true
+    }).catch(()=>{});
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
