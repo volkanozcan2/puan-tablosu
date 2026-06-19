@@ -141,15 +141,29 @@
   .stand-item.lead .pname .mem{color:rgba(241,233,212,.8);}
 
   .winner{text-align:center;background:var(--gold);border:4px solid var(--ink);box-shadow:var(--sh);
-    padding:20px;margin-bottom:22px;transform:rotate(-1deg);}
-  .winner .shot{font-family:var(--display);font-size:clamp(22px,6vw,34px);
-    text-transform:uppercase;color:var(--ink);line-height:1;letter-spacing:.5px;}
-  .winner .dartline{font-size:32px;margin:4px 0 2px;}
-  .winner .who{font-family:var(--display);font-size:clamp(26px,7vw,44px);
-    text-transform:uppercase;color:var(--ink);line-height:1;margin:4px 0;word-break:break-word;
-    -webkit-text-stroke:1px var(--ink);}
-  .winner .mem{font-family:var(--body);font-weight:800;font-size:13px;color:var(--ink);}
-  .winner .pts{font-family:var(--display);font-size:18px;color:var(--ink);margin-top:6px;}
+    padding:20px;margin-bottom:22px;transform:rotate(-1deg);
+    animation:winnerIn .6s cubic-bezier(.18,1.5,.4,1) both;}
+  @keyframes winnerIn{
+    0%{transform:rotate(-1deg) scale(.4);opacity:0;}
+    60%{transform:rotate(-1deg) scale(1.08);opacity:1;}
+    100%{transform:rotate(-1deg) scale(1);opacity:1;}
+  }
+  .winner .shot{font-family:var(--display);font-size:clamp(18px,5vw,26px);
+    text-transform:uppercase;color:var(--ink);line-height:1;letter-spacing:2px;
+    animation:capPop .5s .15s ease-out both;}
+  @keyframes capPop{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  .winner .dartline{font-size:38px;margin:6px 0 2px;display:inline-block;
+    animation:dartSpin .7s .2s cubic-bezier(.2,1.4,.4,1) both;}
+  @keyframes dartSpin{0%{transform:scale(0) rotate(-180deg);}70%{transform:scale(1.3) rotate(10deg);}100%{transform:scale(1) rotate(0);}}
+  .winner .who{font-family:var(--display);font-size:clamp(28px,8vw,50px);
+    text-transform:uppercase;color:var(--ink);line-height:1;margin:6px 0;word-break:break-word;
+    -webkit-text-stroke:1px var(--ink);
+    animation:whoPop .55s .35s cubic-bezier(.18,1.6,.4,1) both;}
+  @keyframes whoPop{0%{opacity:0;transform:scale(.5);}65%{opacity:1;transform:scale(1.12);}100%{transform:scale(1);}}
+  .winner .mem{font-family:var(--body);font-weight:800;font-size:13px;color:var(--ink);
+    animation:capPop .5s .5s ease-out both;}
+  .winner .pts{font-family:var(--display);font-size:20px;color:var(--ink);margin-top:6px;
+    animation:capPop .5s .58s ease-out both;}
 
   .section-cap{font-family:var(--body);font-weight:800;font-size:13px;letter-spacing:1px;
     text-transform:uppercase;color:var(--ink);margin-bottom:12px;}
@@ -216,6 +230,7 @@
   @media (prefers-reduced-motion:reduce){
     .board-logo svg{animation:none;}
     .board-head,.winner{transform:none;}
+    .winner,.winner .shot,.winner .dartline,.winner .who,.winner .mem,.winner .pts{animation:none;}
     button:hover{transform:none;box-shadow:var(--sh-sm);}
   }
 </style>
@@ -226,7 +241,6 @@
     <div class="board-logo" id="boardLogo"></div>
     <div class="head-text">
       <h1>Puan Tablosu</h1>
-      <p>Dart Skor Tahtası</p>
     </div>
   </header>
 
@@ -239,7 +253,7 @@
     </div>
     <div class="row">
       <div>
-        <label id="countLabel">Kaç oyuncu?</label>
+        <label id="countLabel">Kaç kişi?</label>
         <input type="number" id="unitCount" min="2" max="12" value="3">
       </div>
       <div id="sizeWrap" class="hide">
@@ -357,7 +371,7 @@ function setMode(m){
   document.getElementById('modeSolo').classList.toggle('on', m==='solo');
   document.getElementById('modeGroup').classList.toggle('on', m==='group');
   document.getElementById('sizeWrap').classList.toggle('hide', m==='solo');
-  document.getElementById('countLabel').textContent = (m==='group') ? 'Kaç grup?' : 'Kaç oyuncu?';
+  document.getElementById('countLabel').textContent = (m==='group') ? 'Kaç grup?' : 'Kaç kişi?';
 }
 
 function buildEntryFields(){
@@ -499,7 +513,7 @@ function showResults(){
   if(champs.length === 1){
     const w = champs[0];
     win.innerHTML = `
-      <div class="shot">Game Shot!</div>
+      <div class="shot">Kazanan</div>
       <div class="dartline">🎯</div>
       <div class="who">${escapeHtml(w.name)}</div>
       ${w.members.length?`<div class="mem">${w.members.map(escapeHtml).join(' · ')}</div>`:''}
@@ -540,6 +554,11 @@ function showResults(){
 
   fireConfetti();
   saveGame(sorted);
+
+  // kazanan kutusunun animasyonunu her seferinde yeniden tetikle
+  win.style.animation = 'none';
+  void win.offsetWidth;
+  win.style.animation = '';
 }
 
 async function saveGame(sorted){
@@ -601,7 +620,7 @@ async function loadHistory(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const games = await res.json();
     if(!games.length){
-      list.innerHTML = '<div class="muted">Henüz kayıtlı maç yok. Bir oyun bitir, burada görünsün.</div>';
+      list.innerHTML = '<div class="muted">Kayıtlı maç yok.</div>';
       return;
     }
     list.innerHTML = '';
@@ -635,10 +654,21 @@ async function loadHistory(){
   }
 }
 
+const DELETE_PASSWORD = "dartdart";
+function checkDeletePassword(){
+  const entry = prompt("Silmek için şifre girin:");
+  if(entry === null) return false;            // iptal
+  if(entry === DELETE_PASSWORD) return true;
+  alert("Şifre yanlış.");
+  return false;
+}
+
 async function deleteGame(id){
+  if(!checkDeletePassword()) return;
   try{ await fetch(API+'?id='+encodeURIComponent(id), {method:'DELETE'}); loadHistory(); }catch(e){}
 }
 async function clearHistory(){
+  if(!checkDeletePassword()) return;
   if(!confirm('Tüm geçmiş maçlar silinsin mi?')) return;
   try{ await fetch(API+'?all=1', {method:'DELETE'}); loadHistory(); }catch(e){}
 }
