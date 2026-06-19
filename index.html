@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0F2017;
@@ -53,9 +53,9 @@
     border:3px solid var(--ink);padding:4px;}
   .board-logo svg{width:100%;height:100%;display:block;animation:pop .5s cubic-bezier(.2,1.4,.4,1) both;}
   @keyframes pop{from{transform:scale(.4) rotate(-40deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
-  .head-text h1{font-family:'Press Start 2P',var(--display);font-size:clamp(16px,4.4vw,28px);
-    line-height:1.15;text-transform:uppercase;color:var(--cream);
-    -webkit-text-stroke:1px var(--ink);letter-spacing:0;}
+  .head-text h1{font-family:var(--display);font-size:clamp(34px,9vw,46px);
+    line-height:.9;text-transform:uppercase;color:var(--cream);
+    -webkit-text-stroke:1.5px var(--ink);letter-spacing:-1px;}
   .head-text p{font-family:var(--body);font-weight:800;font-size:12px;letter-spacing:2px;
     text-transform:uppercase;color:var(--ink);margin-top:7px;
     background:var(--gold);border:2px solid var(--ink);display:inline-block;padding:3px 8px;}
@@ -451,6 +451,11 @@ function startGame(){
   document.getElementById('game').classList.remove('hide');
   renderTurn();
   renderStandings();
+
+  // oyun basladi bildirimi
+  const kind = (mode==='group') ? 'Gruplar' : 'Oyuncular';
+  const list = units.map(u=>u.name).join(', ');
+  notify('Oyun basladi', `${totalRounds} tur · ${units.length} ${mode==='group'?'grup':'kisi'}\n${kind}: ${list}`, 'dart,arrow_forward');
 }
 
 function memLine(u){
@@ -611,6 +616,13 @@ function showResults(){
   fireConfetti();
   saveGame(sorted);
 
+  // oyun bitti bildirimi (tam siralama + puanlar)
+  const lines = sorted.map((u,idx)=>`${idx+1}. ${u.name} — ${fmt(u.total)}`).join('\n');
+  const champTxt = champs.length>1
+    ? champs.map(c=>c.name).join(' & ')
+    : sorted[0].name;
+  notify('Oyun bitti 🎯', `Kazanan: ${champTxt}\n\n${lines}`, 'dart,checkered_flag');
+
   // kazanan kutusunun animasyonunu her seferinde yeniden tetikle
   win.style.animation = 'none';
   void win.offsetWidth;
@@ -736,6 +748,18 @@ function showToast(msg){
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+// ntfy bildirimi (Netlify fonksiyonu uzerinden). Sessizce calisir, hata oyunu bozmaz.
+function notify(title, message, tags){
+  try{
+    fetch('/api/notify', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({title, message, tags: tags||''}),
+      keepalive: true
+    }).catch(()=>{});
+  }catch(e){}
 }
 
 function fmt(n){ return Number.isInteger(n)? n : n.toFixed(1); }
