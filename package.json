@@ -1,0 +1,10 @@
+{
+  "name": "puan-tablosu",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Neobrutalist puan tablosu - skorlar Netlify Blobs'ta saklanir",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
