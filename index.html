@@ -6,9 +6,10 @@
 <meta name="theme-color" content="#0F2017">
 <meta name="color-scheme" content="dark">
 <title>Puan Tablosu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0F2017;
@@ -52,9 +53,9 @@
     border:3px solid var(--ink);padding:4px;}
   .board-logo svg{width:100%;height:100%;display:block;animation:pop .5s cubic-bezier(.2,1.4,.4,1) both;}
   @keyframes pop{from{transform:scale(.4) rotate(-40deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
-  .head-text h1{font-family:var(--display);font-size:clamp(28px,7vw,46px);
-    line-height:.9;text-transform:uppercase;color:var(--cream);
-    -webkit-text-stroke:1.5px var(--ink);letter-spacing:-1px;}
+  .head-text h1{font-family:'Press Start 2P',var(--display);font-size:clamp(16px,4.4vw,28px);
+    line-height:1.15;text-transform:uppercase;color:var(--cream);
+    -webkit-text-stroke:1px var(--ink);letter-spacing:0;}
   .head-text p{font-family:var(--body);font-weight:800;font-size:12px;letter-spacing:2px;
     text-transform:uppercase;color:var(--ink);margin-top:7px;
     background:var(--gold);border:2px solid var(--ink);display:inline-block;padding:3px 8px;}
@@ -259,15 +260,15 @@
     <div class="row">
       <div>
         <label id="countLabel">Kaç kişi?</label>
-        <input type="number" id="unitCount" min="2" max="12" value="3">
+        <input type="number" inputmode="numeric" id="unitCount" min="2" max="12" value="3">
       </div>
       <div id="sizeWrap" class="hide">
         <label>Grup başına kişi?</label>
-        <input type="number" id="groupSize" min="1" max="10" value="2">
+        <input type="number" inputmode="numeric" id="groupSize" min="1" max="10" value="2">
       </div>
       <div>
         <label>Kaç tur?</label>
-        <input type="number" id="roundCount" min="1" max="50" value="5">
+        <input type="number" inputmode="numeric" id="roundCount" min="1" max="50" value="5">
       </div>
     </div>
     <button class="full red" onclick="buildEntryFields()">Oyuncuları Gir →</button>
@@ -308,7 +309,7 @@
     <div id="restList"></div>
     <div><span id="saveStat" class="savestat busy hide"></span></div>
     <div class="addround">
-      <input type="number" id="extraRounds" min="1" max="20" value="1">
+      <input type="number" inputmode="numeric" id="extraRounds" min="1" max="20" value="1">
       <button class="gold" onclick="addRounds()">+ Tur Ekle</button>
     </div>
     <div class="addround">
@@ -530,7 +531,7 @@ function submitTurn(){
     if(val === 180) got180 = true;
     units[i].total += val;
   });
-  if(got180) showToast('One Hundred and Eighty! 🎯');
+  if(got180) showToast('Destan yazdın 🎯');
 
   renderStandings();
   if(currentRound >= totalRounds){ showResults(); return; }
@@ -565,7 +566,7 @@ function showResults(){
     win.innerHTML = `
       <div class="shot">Kazanan</div>
       <div class="dartline">🎯</div>
-      <div class="who">${escapeHtml(w.name)}</div>
+      <div class="who">${escapeHtml(w.name)} 😎</div>
       ${w.members.length?`<div class="mem">${w.members.map(escapeHtml).join(' · ')}</div>`:''}
       <div class="pts">${fmt(w.total)} puan</div>`;
   } else {
@@ -576,14 +577,17 @@ function showResults(){
       <div class="pts">${fmt(topScore)} puan</div>`;
   }
 
-  const medals = ['🥇','🥈','🥉'];
+  const lastIndex = sorted.length - 1;
+  const showLast = sorted.length > 1;       // tek kişi varsa 😭 gösterme
   const pod = document.getElementById('podium');
   pod.innerHTML = '';
   sorted.slice(0,3).forEach((u,i)=>{
+    const medal = (i===0) ? '🥇' : '';
+    const emo = (i===0) ? ' 😎' : (showLast && i===lastIndex ? ' 😭' : '');
     pod.innerHTML += `
       <div class="pod p${i+1}">
-        <div class="medal">${medals[i]}</div>
-        <div class="pn">${escapeHtml(u.name)}</div>
+        ${medal?`<div class="medal">${medal}</div>`:''}
+        <div class="pn">${escapeHtml(u.name)}${emo}</div>
         ${u.members.length?`<div class="mem">${u.members.map(escapeHtml).join(' · ')}</div>`:''}
         <div class="ps">${fmt(u.total)} puan</div>
       </div>`;
@@ -592,11 +596,13 @@ function showResults(){
   const rest = document.getElementById('restList');
   rest.innerHTML = '';
   sorted.slice(3).forEach((u,i)=>{
+    const rank = i+4;
+    const emo = (showLast && rank-1 === lastIndex) ? ' 😭' : '';
     rest.innerHTML += `
       <div class="rest-row">
         <span class="left">
-          <span class="rk">${i+4}.</span>
-          <span>${escapeHtml(u.name)}${u.members.length?` <span class="mem">(${u.members.map(escapeHtml).join(' · ')})</span>`:''}</span>
+          <span class="rk">${rank}.</span>
+          <span>${escapeHtml(u.name)}${emo}${u.members.length?` <span class="mem">(${u.members.map(escapeHtml).join(' · ')})</span>`:''}</span>
         </span>
         <span>${fmt(u.total)} puan</span>
       </div>`;
