@@ -120,12 +120,17 @@
   .turnbar .big{font-family:var(--display);font-size:34px;color:var(--ink);}
   .turnbar .big .sep{color:var(--red);}
 
-  .score-line{display:flex;gap:12px;align-items:center;margin-bottom:11px;}
+  .score-line{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px;}
   .score-line .name{flex:1;background:var(--paper);border:3px solid var(--ink);padding:12px 15px;
     font-family:var(--display);font-size:18px;color:var(--ink);}
   .score-line .name .tot{font-family:var(--body);font-size:12px;font-weight:800;color:var(--ink-dim);}
   .score-line .name .mem{display:block;font-family:var(--body);font-weight:700;font-size:12px;color:var(--ink-dim);margin-top:2px;}
-  .score-line input{width:104px;margin-bottom:0;flex:none;text-align:center;font-size:22px;}
+  .score-cell{flex:none;width:118px;}
+  .score-cell input{width:100%;margin-bottom:0;text-align:center;font-size:22px;}
+  .score-cell .sum{font-family:var(--display);font-size:13px;color:var(--ink);
+    background:var(--gold);border:3px solid var(--ink);border-top:none;
+    text-align:center;padding:3px;margin-top:-3px;}
+  .score-cell .sum.bad{background:var(--red);color:var(--cream);}
 
   .stand-item{display:flex;align-items:center;gap:13px;border:3px solid var(--ink);background:var(--paper);
     padding:11px 14px;margin-bottom:10px;box-shadow:var(--sh-sm);}
@@ -459,24 +464,69 @@ function renderTurn(){
     box.innerHTML += `
       <div class="score-line">
         <div class="name">${escapeHtml(u.name)} <span class="tot">(top ${fmt(u.total)})</span>${memLine(u)}</div>
-        <input type="number" class="turnScore" data-i="${i}" placeholder="0">
+        <div class="score-cell">
+          <input type="text" inputmode="decimal" class="turnScore" data-i="${i}"
+                 placeholder="5+1+23+50+12" oninput="updateSum(this)" enterkeyhint="done">
+          <div class="sum" data-sum="${i}" style="display:none;"></div>
+        </div>
       </div>`;
   });
   document.getElementById('turnBtn').textContent =
     (currentRound === totalRounds) ? 'Son Turu Kaydet' : 'Turu Kaydet';
 }
 
+// "5+1+23+50+12" veya "91" gibi girdiyi toplar. Geçersizse null döner.
+function parseScore(raw){
+  if(raw == null) return null;
+  let s = String(raw).trim();
+  if(s === '') return null;
+  // virgül ve boşlukları da ayraç say, türkçe ondalık virgülünü değil; sadece + ile topluyoruz
+  s = s.replace(/\s+/g,'');                 // boşlukları sil ("5 + 1" -> "5+1")
+  s = s.replace(/[,;]/g,'+');               // virgül/noktalı virgül de toplama olsun
+  // izin verilen karakterler: rakam, nokta(ondalık), + , -
+  if(!/^[-+]?(\d+\.?\d*)([+-]\d+\.?\d*)*$/.test(s)) return null;
+  const parts = s.match(/[+-]?\d+\.?\d*/g);
+  if(!parts) return null;
+  let sum = 0;
+  for(const p of parts){ const n = parseFloat(p); if(isNaN(n)) return null; sum += n; }
+  return sum;
+}
+
+function updateSum(inp){
+  const i = inp.dataset.i;
+  const box = document.querySelector(`.sum[data-sum="${i}"]`);
+  const raw = inp.value;
+  if(raw.trim() === ''){ box.style.display='none'; return; }
+  const val = parseScore(raw);
+  if(val === null){
+    box.style.display='block'; box.classList.add('bad'); box.textContent='?';
+  } else if(/[+\-,; ]/.test(raw.trim())){   // sadece ifade girildiyse toplamı göster
+    box.style.display='block'; box.classList.remove('bad'); box.textContent='= '+fmt(val);
+  } else {
+    box.style.display='none';               // tek sayı yazıldıysa önizlemeye gerek yok
+  }
+}
+
 function submitTurn(){
   const inputs = document.querySelectorAll('.turnScore');
   let ok = true;
-  inputs.forEach(inp=>{ if(inp.value.trim()==='') ok=false; });
-  if(!ok){ document.getElementById('scoreErr').classList.remove('hide'); return; }
+  const vals = [];
+  inputs.forEach(inp=>{
+    const v = parseScore(inp.value);
+    if(v === null) ok = false;
+    vals.push(v);
+  });
+  if(!ok){
+    document.getElementById('scoreErr').textContent = 'Boş ya da hatalı kutu var. Örnek: 5+1+23+50+12';
+    document.getElementById('scoreErr').classList.remove('hide');
+    return;
+  }
   document.getElementById('scoreErr').classList.add('hide');
 
   let got180 = false;
-  inputs.forEach(inp=>{
+  inputs.forEach((inp,idx)=>{
     const i = parseInt(inp.dataset.i);
-    const val = parseFloat(inp.value)||0;
+    const val = vals[idx];
     if(val === 180) got180 = true;
     units[i].total += val;
   });
