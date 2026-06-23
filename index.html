@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#1C3A2A">
+<meta name="theme-color" content="#1d3557">
 <meta name="color-scheme" content="dark">
 <title>Puan Tablosu</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -19,15 +19,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#1C3A2A;
-    --ink:#0C0F0A;
-    --cream:#F1E9D4;
-    --paper:#FBF7EC;
-    --red:#E03A2B;
-    --green:#1FA259;
-    --gold:#EBB220;
-    --chalk:#F1E9D4;
-    --ink-dim:rgba(12,15,10,.58);
+    /* Yeni palet */
+    --punch-red:#e63946;
+    --honeydew:#f1faee;
+    --frosted-blue:#a8dadc;
+    --cerulean:#457b9d;
+    --oxford-navy:#1d3557;
+
+    /* Mevcut isimleri yeni palete bagla */
+    --bg:#1d3557;            /* oxford navy - arka plan */
+    --ink:#13233b;           /* cerceve/golge: koyu lacivert-siyah */
+    --cream:#f1faee;         /* honeydew - kart zemini */
+    --paper:#ffffff;         /* en acik zemin (input vb.) */
+    --red:#e63946;           /* punch red - vurgu */
+    --green:#457b9d;         /* cerulean - ikincil aksan */
+    --gold:#a8dadc;          /* frosted blue - acik vurgu */
+    --chalk:#f1faee;         /* acik metin (koyu zemin uzerinde) */
+    --ink-dim:rgba(19,35,59,.58);
     --display:'Archivo Black','Arial Black',system-ui,sans-serif;
     --body:'Archivo','Arial',system-ui,sans-serif;
     --sh:7px 7px 0 var(--ink);
@@ -41,7 +49,7 @@
     min-height:100vh;
     padding:calc(28px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
     background-color:var(--bg);
-    background-image:radial-gradient(rgba(241,233,212,.06) 1.4px, transparent 1.4px);
+    background-image:radial-gradient(rgba(168,218,220,.10) 1.4px, transparent 1.4px);
     background-size:24px 24px;
     -webkit-tap-highlight-color:transparent;
   }
@@ -205,7 +213,7 @@
   .pod .ps{font-family:var(--display);font-size:15px;color:var(--ink);}
   .pod.p1{order:2;background:var(--gold);padding-bottom:34px;}
   .pod.p2{order:1;background:var(--paper);padding-bottom:22px;}
-  .pod.p3{order:3;background:#CDE8D7;padding-bottom:14px;}
+  .pod.p3{order:3;background:var(--frosted-blue);padding-bottom:14px;}
 
   .rest-row{display:flex;justify-content:space-between;align-items:center;gap:10px;
     border:3px solid var(--ink);background:var(--paper);padding:11px 14px;margin-bottom:10px;
@@ -402,8 +410,8 @@ let historyReturnTo = 'setup';
 
 function dartboardSVG(){
   const cx=100, cy=100;
-  const cream='#F1E9D4', black='#0C0F0A', red='#E03A2B', green='#1FA259';
-  const wire='rgba(12,15,10,.6)';
+  const cream='#f1faee', black='#13233b', red='#e63946', green='#457b9d';
+  const wire='rgba(19,35,59,.6)';
   const segs=20, step=Math.PI*2/segs, start=-Math.PI/2 - step/2;
   const pt=(r,a)=>[cx+r*Math.cos(a), cy+r*Math.sin(a)];
   function sector(r1,r2,a1,a2,fill){
@@ -880,7 +888,7 @@ function fireConfetti(){
   const cv = document.getElementById('confetti');
   const ctx = cv.getContext('2d');
   cv.width = innerWidth; cv.height = innerHeight;
-  const colors = ['#E03A2B','#1FA259','#EBB220','#F1E9D4','#0C0F0A'];
+  const colors = ['#e63946','#457b9d','#a8dadc','#f1faee','#13233b'];
   const bits = [];
   for(let i=0;i<170;i++){
     bits.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*0.5,
