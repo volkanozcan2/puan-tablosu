@@ -1,11 +1,9 @@
-import { getStore, getDeployStore } from "@netlify/blobs";
+import { getStore } from "@netlify/blobs";
 
-// Production verisini test/preview verisinden ayri tut.
+// Tek, kalici global store. Deploy'lar (GitHub push) bu veriyi SIFIRLAMAZ.
 const STORE_NAME = "puan-tablosu-skorlar";
 function getScoreStore() {
-  const opts = { name: STORE_NAME, consistency: "strong" };
-  if (process.env.CONTEXT === "production") return getStore(opts);
-  return getDeployStore(opts);
+  return getStore({ name: STORE_NAME, consistency: "strong" });
 }
 
 export default async (req) => {
