@@ -24,10 +24,14 @@ export default async (req) => {
     // --- Yeni mac kaydet ---
     if (req.method === "POST") {
       const body = await req.json();
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      // Ice aktarma icin opsiyonel tarih: body.savedAt (ms) veya body.date (ISO).
+      let savedAt = Date.now();
+      if (body.savedAt && Number(body.savedAt)) savedAt = Number(body.savedAt);
+      else if (body.date) { const t = Date.parse(body.date); if (!isNaN(t)) savedAt = t; }
+      const id = `${savedAt}-${Math.random().toString(36).slice(2, 8)}`;
       const record = {
         id,
-        savedAt: Date.now(),
+        savedAt,
         mode: body.mode === "group" ? "group" : "solo",
         rounds: Number(body.rounds) || 0,
         results: Array.isArray(body.results) ? body.results : [],
